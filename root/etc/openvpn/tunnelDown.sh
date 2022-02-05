@@ -7,5 +7,5 @@ else
     echo "resolv.conf backup not found, could not restore"
 fi
 
-/etc/transmission/stop.sh
+/etc/deluge/stop.sh
 [[ -f /opt/privoxy/stop.sh ]] && /opt/privoxy/stop.sh

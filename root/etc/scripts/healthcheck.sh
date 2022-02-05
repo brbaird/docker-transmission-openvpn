@@ -41,16 +41,16 @@ echo "Network is up"
 #Service check
 #Expected output is 2 for both checks, 1 for process and 1 for grep
 OPENVPN=$(pgrep openvpn | wc -l )
-TRANSMISSION=$(pgrep transmission | wc -l)
+DELUGE=$(pgrep delugeD | wc -l)
 
 if [[ ${OPENVPN} -ne 1 ]]; then
 	echo "Openvpn process not running"
 	exit 1
 fi
-if [[ ${TRANSMISSION} -ne 1 ]]; then
-	echo "transmission-daemon process not running"
+if [[ ${DELUGE} -ne 1 ]]; then
+	echo "deluge-daemon process not running"
 	exit 1
 fi
 
-echo "Openvpn and transmission-daemon processes are running"
+echo "Openvpn and deluge-daemon processes are running"
 exit 0

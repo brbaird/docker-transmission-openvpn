@@ -4,10 +4,10 @@
 ## this is an amalgamation of two scripts to keep my PIA working, credit to the main authors, the original scripts linked in the READ.ME
 #v0.2
 
-. /etc/transmission/environment-variables.sh
+. /etc/deluge/environment-variables.sh
 
 # Settings
-TRANSMISSION_PASSWD_FILE=/config/transmission-credentials.txt
+TRANSMISSION_PASSWD_FILE=/config/openvpn-credentials.txt
 
 transmission_username=$(head -1 ${TRANSMISSION_PASSWD_FILE})
 transmission_passwd=$(tail -1 ${TRANSMISSION_PASSWD_FILE})
@@ -66,8 +66,8 @@ bind_port () {
       $verify \
       "https://$pf_host:19999/bindPort")
   if [ "$(echo $pf_bind | jq -r .status)" = "OK" ]; then
-    echo "Reserved Port: $pf_port  $(date)"		
-  else  
+    echo "Reserved Port: $pf_port  $(date)"
+  else
     echo "$(date): bindPort error"
     echo $pf_bind
     echo "the has been a fatal_error"
@@ -76,50 +76,35 @@ bind_port () {
 
 bind_trans () {
 new_port=$pf_port
-#
-# Now, set port in Transmission
-#
-
-# Check if transmission remote is set up with authentication
-auth_enabled=$(grep 'rpc-authentication-required\"' "$transmission_settings_file" \
-                   | grep -oE 'true|false')
-
-
-if [[ "true" = "$auth_enabled" ]]
-  then
-  echo "transmission auth required"
-  myauth="--auth $transmission_username:$transmission_passwd"
-else
-    echo "transmission auth not required"
-    myauth=""
-fi
 
 # make sure transmission is running and accepting requests
 echo "waiting for transmission to become responsive"
-until torrent_list="$(transmission-remote $TRANSMISSION_RPC_PORT $myauth -l)"; do sleep 10; done
+until torrent_list="$(deluge-console -c /config "info")"; do sleep 10; done
 echo "transmission became responsive"
 output="$(echo "$torrent_list" | tail -n 2)"
 echo "$output"
 
 # get current listening port
-transmission_peer_port=$(transmission-remote $TRANSMISSION_RPC_PORT $myauth -si | grep Listenport | grep -oE '[0-9]+')
-if [[ "$new_port" != "$transmission_peer_port" ]]; then
+peer_port=$(deluge-console -c /config "config listen_ports" | grep -oE '[0-9]+' | sort -u)
+if [[ "$new_port" != "$peer_port" ]]; then
   if [[ "true" = "$ENABLE_UFW" ]]; then
     echo "Update UFW rules before changing port in Transmission"
 
-    echo "denying access to $transmission_peer_port"
-    ufw deny "$transmission_peer_port"
+    echo "denying access to $peer_port"
+    ufw deny "$peer_port"
 
     echo "allowing $new_port through the firewall"
     ufw allow "$new_port"
   fi
 
   echo "setting transmission port to $new_port"
-  transmission-remote ${TRANSMISSION_RPC_PORT} ${myauth} -p "$new_port"
+  deluge-console -c /config "config --set listen_ports ($new_port, $new_port); config --set listen_random_port null;
+  config --set random_outgoing_ports null"
+#  deluge-console -c /config 'config --set listen_random_port null; config --set random_outgoing_ports null'
 
   echo "Checking port..."
   sleep 10
-  transmission-remote ${TRANSMISSION_RPC_PORT} ${myauth} -pt
+#  transmission-remote ${TRANSMISSION_RPC_PORT} ${myauth} -pt
 else
     echo "No action needed, port hasn't changed"
 fi

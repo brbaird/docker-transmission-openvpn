@@ -1,6 +1,6 @@
 #!/bin/bash
 # Source our persisted env variables from container startup
-. /etc/transmission/environment-variables.sh
+. /etc/deluge/environment-variables.sh
 
 if [[ "${PEER_DNS,,}" == "true" ]]; then
         NS=
@@ -51,7 +51,7 @@ if [[ "${PEER_DNS,,}" == "true" ]]; then
         fi
 fi
 
-/etc/transmission/start.sh "$@"
+/etc/deluge/start.sh "$@"
 [[ -f /opt/privoxy/start.sh && -x /opt/privoxy/start.sh ]] && /opt/privoxy/start.sh
 
 exit 0

@@ -1,6 +1,6 @@
-site_name: docker-transmission-openvpn
-site_url: http://haugene.github.io/docker-transmission-openvpn/
-repo_url: https://github.com/haugene/docker-transmission-openvpn/
+site_name: docker-deluge-openvpn
+site_url: http://haugene.github.io/docker-deluge-openvpn/
+repo_url: https://github.com/haugene/docker-deluge-openvpn/
 theme:
   name: 'material'
 markdown_extensions:

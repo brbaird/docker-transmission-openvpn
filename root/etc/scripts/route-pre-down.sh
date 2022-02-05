@@ -8,12 +8,12 @@ NOW=$(date +"%Y-%m-%d %T")
 echo "${NOW}: route-pre-down script: Start "
 
 echo "Sending exit signal to transmission."
-TRANSMISSION_PASSWD_FILE=/config/transmission-credentials.txt
+TRANSMISSION_PASSWD_FILE=/config/deluge-credentials.txt
 transmission_username=$(head -1 ${TRANSMISSION_PASSWD_FILE})
 transmission_passwd=$(tail -1 ${TRANSMISSION_PASSWD_FILE})
 transmission_settings_file=${TRANSMISSION_HOME}/settings.json
 
-# Check if transmission remote is set up with authentication
+# Check if deluge remote is set up with authentication
 auth_enabled=$(grep 'rpc-authentication-required\"' "$transmission_settings_file" \
                    | grep -oE 'true|false')
 
@@ -26,7 +26,7 @@ else
     myauth=""
 fi
 
-transmission-remote $myauth --exit &
+deluge-remote $myauth --exit &
 
 wait
 

@@ -1,57 +1,33 @@
-FROM alpine:3.13 as TransmissionUIs
+FROM ubuntu:18.04
 
-RUN apk --no-cache add curl jq \
-    && mkdir -p /opt/transmission-ui \
-    && echo "Install Shift" \
-    && wget -qO- https://github.com/killemov/Shift/archive/master.tar.gz | tar xz -C /opt/transmission-ui \
-    && mv /opt/transmission-ui/Shift-master /opt/transmission-ui/shift \
-    && echo "Install Flood for Transmission" \
-    && wget -qO- https://github.com/johman10/flood-for-transmission/releases/download/latest/flood-for-transmission.tar.gz | tar xz -C /opt/transmission-ui \
-    && echo "Install Combustion" \
-    && wget -qO- https://github.com/Secretmapper/combustion/archive/release.tar.gz | tar xz -C /opt/transmission-ui \
-    && echo "Install kettu" \
-    && wget -qO- https://github.com/endor/kettu/archive/master.tar.gz | tar xz -C /opt/transmission-ui \
-    && mv /opt/transmission-ui/kettu-master /opt/transmission-ui/kettu \
-    && echo "Install Transmission-Web-Control" \
-    && mkdir /opt/transmission-ui/transmission-web-control \
-    && curl -sL $(curl -s https://api.github.com/repos/ronggang/transmission-web-control/releases/latest | jq --raw-output '.tarball_url') | tar -C /opt/transmission-ui/transmission-web-control/ --strip-components=2 -xz
+ARG DEBIAN_FRONTEND="noninteractive"
 
-FROM ubuntu:20.04
-
-VOLUME /data
-VOLUME /config
-
-COPY --from=TransmissionUIs /opt/transmission-ui /opt/transmission-ui
-
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y \
-    dumb-init openvpn transmission-daemon transmission-cli privoxy \
-    tzdata dnsutils iputils-ping ufw openssh-client git jq curl wget unrar unzip bc \
-    && ln -s /usr/share/transmission/web/style /opt/transmission-ui/transmission-web-control \
-    && ln -s /usr/share/transmission/web/images /opt/transmission-ui/transmission-web-control \
-    && ln -s /usr/share/transmission/web/javascript /opt/transmission-ui/transmission-web-control \
-    && ln -s /usr/share/transmission/web/index.html /opt/transmission-ui/transmission-web-control/index.original.html \
-    && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* \
-    && groupmod -g 1000 users \
-    && useradd -u 911 -U -d /config -s /bin/false abc \
-    && usermod -G users abc
-
+RUN set -ex; \
+    apt-get update && \
+    apt-get -y install software-properties-common && \
+    add-apt-repository -u ppa:deluge-team/stable && \
+    apt-get update && apt-get -y install dumb-init iputils-ping dnsutils bash jq net-tools openvpn curl ufw deluged deluge-web deluge-console p7zip-full unrar unzip && \
+    echo "Cleanup"; \
+    rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/* && \
+    echo "Adding user"; \
+    groupmod -g 1000 users && \
+    useradd -u 911 -U -d /config -s /bin/false abc && \
+    usermod -G users abc
 
 # Add configuration and scripts
-ADD openvpn/ /etc/openvpn/
-ADD transmission/ /etc/transmission/
-ADD scripts /etc/scripts/
-ADD privoxy/scripts /opt/privoxy/
+COPY root/ /
 
 ENV OPENVPN_USERNAME=**None** \
     OPENVPN_PASSWORD=**None** \
     OPENVPN_PROVIDER=**None** \
     GLOBAL_APPLY_PERMISSIONS=true \
-    TRANSMISSION_HOME=/data/transmission-home \
-    TRANSMISSION_RPC_PORT=9091 \
-    TRANSMISSION_DOWNLOAD_DIR=/data/completed \
-    TRANSMISSION_INCOMPLETE_DIR=/data/incomplete \
-    TRANSMISSION_WATCH_DIR=/data/watch \
+    TZ=Europe/Berlin \
+    DELUGE_WEB_PORT=8112 \
+    DELUGE_DEAMON_PORT=58846 \
+    DELUGE_DOWNLOAD_DIR=/download/completed \
+    DELUGE_INCOMPLETE_DIR=/download/incomplete \
+    DELUGE_TORRENT_DIR=/download/torrents \
+    DELUGE_WATCH_DIR=/download/watch \
     CREATE_TUN_DEVICE=true \
     ENABLE_UFW=false \
     UFW_ALLOW_GW_NET=false \
@@ -59,34 +35,20 @@ ENV OPENVPN_USERNAME=**None** \
     UFW_DISABLE_IPTABLES_REJECT=false \
     PUID= \
     PGID= \
+    UMASK=022 \
     PEER_DNS=true \
     PEER_DNS_PIN_ROUTES=true \
     DROP_DEFAULT_ROUTE= \
-    WEBPROXY_ENABLED=false \
-    WEBPROXY_PORT=8118 \
-    WEBPROXY_USERNAME= \
-    WEBPROXY_PASSWORD= \
-    LOG_TO_STDOUT=false \
     HEALTH_CHECK_HOST=google.com \
-    SELFHEAL=false
+    LOG_TO_STDOUT=false \
+    DELUGE_LISTEN_PORT_LOW=53394 \
+    DELUGE_LISTEN_PORT_HIGH=53404 \
+    DELUGE_OUTGOING_PORT_LOW=63394 \
+    DELUGE_OUTGOING_PORT_HIGH=63404
 
 HEALTHCHECK --interval=1m CMD /etc/scripts/healthcheck.sh
 
-# Add labels to identify this image and version
-ARG REVISION
-# Set env from build argument or default to empty string
-ENV REVISION=${REVISION:-""}
-LABEL org.opencontainers.image.source=https://github.com/haugene/docker-transmission-openvpn
-LABEL org.opencontainers.image.revision=$REVISION
-
-# Compatability with https://hub.docker.com/r/willfarrell/autoheal/
-LABEL autoheal=true
-
-# Expose port and run
-
-#Transmission-RPC
-EXPOSE 9091
-# Privoxy
-EXPOSE 8118
+# Deluge Deamon and web
+EXPOSE 8112 58846
 
 CMD ["dumb-init", "/etc/openvpn/start.sh"]
