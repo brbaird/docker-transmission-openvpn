@@ -25,6 +25,22 @@ if [[ -x /scripts/deluge-pre-start.sh ]]; then
   echo "/scripts/deluge-pre-start.sh returned $?"
 fi
 
+# if config file doesnt exist (wont exist until user changes a setting) then copy default config file
+if [[ ! -f /config/core.conf ]]; then
+  log "[info] Deluge config file doesn't exist, copying default..."
+  cp /etc/config/core.conf /config
+else
+  log "[info] Deluge config file already exists, skipping copy"
+fi
+
+# if config file doesnt exist then copy stock config file
+if [[ ! -f /config/web.conf ]]; then
+  log "[info] Deluge webui config file doesn't exist, copying default..."
+  cp /etc/config/web.conf /config
+else
+  log "[info] Deluge webui config file already exists, skipping copy"
+fi
+
 echo "Updating DELUGE_BIND_ADDRESS_IPV4 to the ip of $1 : $4"
 export DELUGE_BIND_ADDRESS_IPV4=$4
 # Also update the persisted settings in case it is already set. First remove any old value, then add new.
