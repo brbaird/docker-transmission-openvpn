@@ -41,7 +41,7 @@ echo "Network is up"
 #Service check
 #Expected output is 2 for both checks, 1 for process and 1 for grep
 OPENVPN=$(pgrep openvpn | wc -l )
-DELUGE=$(pgrep delugeD | wc -l)
+DELUGE=$(pgrep deluged | wc -l)
 
 if [[ ${OPENVPN} -ne 1 ]]; then
 	echo "Openvpn process not running"

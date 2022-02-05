@@ -162,10 +162,6 @@ else
   chmod 600 /config/openvpn-credentials.txt
 fi
 
-# add deluge credentials from env vars
-#echo "${TRANSMISSION_RPC_USERNAME}" > /config/transmission-credentials.txt
-#echo "${TRANSMISSION_RPC_PASSWORD}" >> /config/transmission-credentials.txt
-
 # Persist deluge settings for use by deluge-daemon
 python3 /etc/openvpn/persistEnvironment.py /etc/deluge/environment-variables.sh
 

@@ -31,14 +31,6 @@ export DELUGE_BIND_ADDRESS_IPV4=$4
 sed -i '/DELUGE_BIND_ADDRESS_IPV4/d' /etc/deluge/environment-variables.sh
 echo "export DELUGE_BIND_ADDRESS_IPV4=$4" >>/etc/deluge/environment-variables.sh
 
-#echo "Updating Transmission settings.json with values from env variables"
-# Ensure TRANSMISSION_HOME is created
-#mkdir -p ${TRANSMISSION_HOME}
-#python3 /etc/deluge/updateSettings.py /etc/deluge/default-settings.json ${TRANSMISSION_HOME}/settings.json || exit 1
-#
-#echo "sed'ing True to true"
-#sed -i 's/True/true/g' ${TRANSMISSION_HOME}/settings.json
-
 if [ -e /config/core.conf ]; then
   log "Updating Deluge conf file"
   #Interface
