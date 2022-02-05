@@ -98,12 +98,11 @@ if [[ "$new_port" != "$peer_port" ]]; then
   fi
 
   echo "setting transmission port to $new_port"
-  deluge-console -c /config "config --set listen_ports ($new_port, $new_port); config --set listen_random_port null;
-  config --set random_outgoing_ports null"
-#  deluge-console -c /config 'config --set listen_random_port null; config --set random_outgoing_ports null'
+  deluge-console -c /config "config --set listen_ports ($new_port, $new_port); config --set random_port false"
 
-  echo "Checking port..."
-  sleep 10
+# TODO: add port checking here
+#   echo "Checking port..."
+#   sleep 10
 #  transmission-remote ${TRANSMISSION_RPC_PORT} ${myauth} -pt
 else
     echo "No action needed, port hasn't changed"
